@@ -16,18 +16,24 @@ public class CMASRestResolver implements IProxyTargetResolver
 {
    
    private String cmasBaseUrl;
-   private JSONParser parser = new JSONParser();
+   private JSONParser parser;
+   private Client client;
    
    public CMASRestResolver ( String cmasBaseUrl )
    {
+      this ( cmasBaseUrl, new JSONParser(), Client.create() );
+   }
+   
+   public CMASRestResolver ( String cmasBaseUrl, JSONParser parser, Client client )
+   {
       this.cmasBaseUrl = cmasBaseUrl;
+      this.parser = parser;
+      this.client = client;
    }
 
    public InetSocketAddress resolveTarget( ChannelEvent e )
    {
-      // make rest call to cmas to get registration
-      Client client = Client.create();
-      
+      // make rest call to cmas to get registration      
       String remoteIp = ((InetSocketAddress)e.getChannel ( ).getRemoteAddress ( )).getAddress ( ).getHostAddress ( );
  
       WebResource webResource = client.resource(cmasBaseUrl + "uirest/vnc/registration/" + remoteIp );
