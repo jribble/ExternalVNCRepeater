@@ -36,7 +36,7 @@ public class CMASRestResolver implements IProxyTargetResolver
       // make rest call to cmas to get registration      
       String remoteIp = ((InetSocketAddress)e.getChannel ( ).getRemoteAddress ( )).getAddress ( ).getHostAddress ( );
  
-      WebResource webResource = client.resource(cmasBaseUrl + "uirest/vnc/registration/" + remoteIp );
+      WebResource webResource = client.resource(cmasBaseUrl + (cmasBaseUrl.endsWith ( "/" ) ? "" : "/") + "uirest/vnc/registration/" + remoteIp );
  
       ClientResponse response = webResource.accept("application/json").get(ClientResponse.class);
  

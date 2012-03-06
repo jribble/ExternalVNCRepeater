@@ -59,4 +59,78 @@ public class CMASRestResolverTest
       assertEquals ( host, resultAddress.getHostName ( ) );
       assertEquals ( port, resultAddress.getPort ( ) );
    }
+
+   @Test
+   public void testBaseUrlHandlingTrailingDelimiter ( ) throws Exception
+   {
+      String host = "4.3.2.1";
+      byte[] hostbytes = {0x4, 0x3, 0x2, 0x1};
+      int port = 5646;
+      String jsonResponse = "{\"name\":\"name\",\"host\":\"" + host + "\",\"port\":" + port + "}";
+      String cmasBaseUrl = "http://test/";
+      JSONParser parser = new JSONParser();
+      Client client = mock ( Client.class );
+      ClientResponse clientResponse = mock ( ClientResponse.class );
+      ChannelEvent e = mock ( ChannelEvent.class );
+      Channel channel = mock ( Channel.class );
+      InetSocketAddress remoteAddress = new InetSocketAddress ( InetAddress.getByAddress ( null, hostbytes ), port  );
+      
+      when ( e.getChannel ( ) ).thenReturn ( channel );
+      when ( channel.getRemoteAddress ( ) ).thenReturn ( remoteAddress );
+      
+      WebResource webResource = mock ( WebResource.class );
+      Builder builder = PowerMockito.mock ( Builder.class );
+      
+      when ( client.resource ( (String) any() ) ).thenReturn ( webResource );
+      when ( webResource.accept ( (String) any() ) ).thenReturn ( builder );
+      PowerMockito.when ( builder.get ( ClientResponse.class ) ).thenReturn ( clientResponse );
+      when ( clientResponse.getStatus ( ) ).thenReturn ( 200 );
+      when ( clientResponse.getEntity(String.class)).thenReturn ( jsonResponse );
+      
+      CMASRestResolver resolver = new CMASRestResolver ( cmasBaseUrl, parser, client );
+      
+      InetSocketAddress resultAddress = resolver.resolveTarget ( e );
+      
+      verify(client).resource ( cmasBaseUrl + "uirest/vnc/registration/" + host );
+      
+      assertEquals ( host, resultAddress.getHostName ( ) );
+      assertEquals ( port, resultAddress.getPort ( ) );
+   }
+
+   @Test
+   public void testBaseUrlHandlingNoTrailingDelimiter ( ) throws Exception
+   {
+      String host = "4.3.2.1";
+      byte[] hostbytes = {0x4, 0x3, 0x2, 0x1};
+      int port = 5646;
+      String jsonResponse = "{\"name\":\"name\",\"host\":\"" + host + "\",\"port\":" + port + "}";
+      String cmasBaseUrl = "http://test";
+      JSONParser parser = new JSONParser();
+      Client client = mock ( Client.class );
+      ClientResponse clientResponse = mock ( ClientResponse.class );
+      ChannelEvent e = mock ( ChannelEvent.class );
+      Channel channel = mock ( Channel.class );
+      InetSocketAddress remoteAddress = new InetSocketAddress ( InetAddress.getByAddress ( null, hostbytes ), port  );
+      
+      when ( e.getChannel ( ) ).thenReturn ( channel );
+      when ( channel.getRemoteAddress ( ) ).thenReturn ( remoteAddress );
+      
+      WebResource webResource = mock ( WebResource.class );
+      Builder builder = PowerMockito.mock ( Builder.class );
+      
+      when ( client.resource ( (String) any() ) ).thenReturn ( webResource );
+      when ( webResource.accept ( (String) any() ) ).thenReturn ( builder );
+      PowerMockito.when ( builder.get ( ClientResponse.class ) ).thenReturn ( clientResponse );
+      when ( clientResponse.getStatus ( ) ).thenReturn ( 200 );
+      when ( clientResponse.getEntity(String.class)).thenReturn ( jsonResponse );
+      
+      CMASRestResolver resolver = new CMASRestResolver ( cmasBaseUrl, parser, client );
+      
+      InetSocketAddress resultAddress = resolver.resolveTarget ( e );
+      
+      verify(client).resource ( cmasBaseUrl + "/uirest/vnc/registration/" + host );
+      
+      assertEquals ( host, resultAddress.getHostName ( ) );
+      assertEquals ( port, resultAddress.getPort ( ) );
+   }
 }
