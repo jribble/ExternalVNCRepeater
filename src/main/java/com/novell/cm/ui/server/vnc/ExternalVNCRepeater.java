@@ -23,6 +23,12 @@ public class ExternalVNCRepeater
 
    @Option( name = "--ssl-only", usage = "disallow non-encrypted connections" )
    private boolean       requireSSL = false;
+   
+   @Option(name="--keystore",usage="path to a java keystore file. Required for SSL.")
+   private String keystore = null;
+   
+   @Option(name="--keystore-password",usage="password to the java keystore file. Required for SSL.")
+   private String keystorePassword = null;
 
    @Argument( index = 0, metaVar = "source_port", usage = "(required) local port the websockify server will listen on", required = true )
    private int           sourcePort;
@@ -79,26 +85,27 @@ public class ExternalVNCRepeater
       SSLSetting sslSetting = SSLSetting.OFF;
       if ( requireSSL ) sslSetting = SSLSetting.REQUIRED;
       else if ( enableSSL ) sslSetting = SSLSetting.ON;
-        
-        if ( sslSetting != SSLSetting.OFF ) {
-            String keyStoreFilePath = System.getProperty("keystore.file.path");
-            if (keyStoreFilePath == null || keyStoreFilePath.isEmpty()) {
-                System.out.println("ERROR: System property keystore.file.path not set. Exiting now!");
-                System.exit(1);
-            }
-   
-            String keyStoreFilePassword = System.getProperty("keystore.file.password");
-            if (keyStoreFilePassword == null || keyStoreFilePassword.isEmpty()) {
-                System.out.println("ERROR: System property keystore.file.password not set. Exiting now!");
-                System.exit(1);
-            }
-        }
+
+      
+      if ( sslSetting != SSLSetting.OFF ) {
+          if (keystore == null || keystore.isEmpty()) {
+              System.out.println("No keystore specified.");
+          printUsage(System.err);
+              System.exit(1);
+          }
+
+          if (keystorePassword == null || keystorePassword.isEmpty()) {
+              System.out.println("No keystore password specified.");
+          printUsage(System.err);
+              System.exit(1);
+          }
+      }
 
       System.out.println ( "Proxying *:" + sourcePort + " to workloads defined by CMAS at " + cmasBaseUrl + " ..." );
       if(sslSetting != SSLSetting.OFF) System.out.println("SSL is " + (sslSetting == SSLSetting.REQUIRED ? "required." : "enabled."));
 
       WebsockifyServer ws = new WebsockifyServer ( );
-      ws.connect ( sourcePort, new CMASRestResolver ( cmasBaseUrl ), sslSetting, null );
+      ws.connect ( sourcePort, new CMASRestResolver ( cmasBaseUrl ), sslSetting, keystore, keystorePassword, null );
 
    }
 }
