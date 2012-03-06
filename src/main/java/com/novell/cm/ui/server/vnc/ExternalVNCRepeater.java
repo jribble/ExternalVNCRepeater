@@ -1,44 +1,104 @@
 package com.novell.cm.ui.server.vnc;
 
-import com.netiq.websockify.Websockify;
+
+import java.io.PrintStream;
+
+import org.kohsuke.args4j.Argument;
+import org.kohsuke.args4j.CmdLineException;
+import org.kohsuke.args4j.CmdLineParser;
+import org.kohsuke.args4j.Option;
+
+import com.netiq.websockify.WebsockifyServer;
+import com.netiq.websockify.WebsockifyServer.SSLSetting;
+
+
 
 public class ExternalVNCRepeater
-{
+{   
+   @Option(name="--help",usage="show this help message and quit")
+   private boolean showHelp = false;
+   
+   @Option( name = "--enable-ssl", usage = "enable SSL" )
+   private boolean       enableSSL  = false;
+
+   @Option( name = "--ssl-only", usage = "disallow non-encrypted connections" )
+   private boolean       requireSSL = false;
+
+   @Argument( index = 0, metaVar = "source_port", usage = "(required) local port the websockify server will listen on", required = true )
+   private int           sourcePort;
+
+   @Argument( index = 1, metaVar = "cmas_base_url", usage = "(required) the base URL of the CMAS server", required = true )
+   private String        cmasBaseUrl;
+
+   private CmdLineParser parser;
+
+
+   public ExternalVNCRepeater()
+   {
+      parser = new CmdLineParser ( this );
+   }
+
+
+   public void printUsage( PrintStream out )
+   {
+      out.println ( "Usage:" );
+      out.println ( " java -jar external-vnc-repeater.jar [options] source_port cmas_base_url" );
+      out.println ( );
+      out.println ( "Options:" );
+      parser.printUsage ( out );
+      out.println ( );
+      out.println ( "Example:" );
+      out.println ( " java -jar external-vnc-repeater.jar 5900 https://cloud.acmecloud.demo" );
+   }
+   
    public static void main(String[] args) throws Exception {
-       // Validate command line options.
-       if (args.length != 2 && args.length != 3) {
-           System.err.println(
-                   "Usage: " + Websockify.class.getSimpleName() +
-                   " <local port> <CMAS base URL> [encrypt]");
-           return;
-       }
-       
-       if (args.length == 3) {
-           String keyStoreFilePath = System.getProperty("keystore.file.path");
-           if (keyStoreFilePath == null || keyStoreFilePath.isEmpty()) {
-               System.out.println("ERROR: System property keystore.file.path not set. Exiting now!");
-               System.exit(1);
-           }
+     new ExternalVNCRepeater().doMain(args);
+   }
+   
+   public void doMain(String[] args) throws Exception
+   {
+      parser.setUsageWidth ( 80 );
 
-           String keyStoreFilePassword = System.getProperty("keystore.file.password");
-           if (keyStoreFilePassword == null || keyStoreFilePassword.isEmpty()) {
-               System.out.println("ERROR: System property keystore.file.password not set. Exiting now!");
-               System.exit(1);
-           }
-       }
+      try
+      {
+         parser.parseArgument ( args );
+      }
+      catch ( CmdLineException e )
+      {
+         System.err.println ( e.getMessage ( ) );
+         printUsage ( System.err );
+         return;
+      }
 
-       // Parse command line options.
-       int localPort = Integer.parseInt(args[0]);
-       String cmasBaseUrl = args[1];
-       boolean useSSL = args.length < 3 ? false : true;
+      if ( showHelp )
+      {
+         printUsage ( System.out );
+         return;
+      }
+      
+      SSLSetting sslSetting = SSLSetting.OFF;
+      if ( requireSSL ) sslSetting = SSLSetting.REQUIRED;
+      else if ( enableSSL ) sslSetting = SSLSetting.ON;
+        
+        if ( sslSetting != SSLSetting.OFF ) {
+            String keyStoreFilePath = System.getProperty("keystore.file.path");
+            if (keyStoreFilePath == null || keyStoreFilePath.isEmpty()) {
+                System.out.println("ERROR: System property keystore.file.path not set. Exiting now!");
+                System.exit(1);
+            }
+   
+            String keyStoreFilePassword = System.getProperty("keystore.file.password");
+            if (keyStoreFilePassword == null || keyStoreFilePassword.isEmpty()) {
+                System.out.println("ERROR: System property keystore.file.password not set. Exiting now!");
+                System.exit(1);
+            }
+        }
 
-       System.out.println(
-               "Websockify Proxying *:" + localPort + " to workloads defined by CMAS at " +
-               cmasBaseUrl + " ...");
-       if(useSSL) System.out.println("Websocket communications are SSL encrypted.");
+      System.out.println ( "Proxying *:" + sourcePort + " to workloads defined by CMAS at " + cmasBaseUrl + " ..." );
+      if(sslSetting != SSLSetting.OFF) System.out.println("SSL is " + (sslSetting == SSLSetting.REQUIRED ? "required." : "enabled."));
 
-       Websockify ws = new Websockify ( );
-       ws.connect ( localPort, new CMASRestResolver ( cmasBaseUrl ), useSSL, false );
-       
+      WebsockifyServer ws = new WebsockifyServer ( );
+      ws.connect ( sourcePort, new CMASRestResolver ( cmasBaseUrl ), sslSetting, null );
+
    }
 }
