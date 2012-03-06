@@ -89,13 +89,13 @@ public class ExternalVNCRepeater
       
       if ( sslSetting != SSLSetting.OFF ) {
           if (keystore == null || keystore.isEmpty()) {
-              System.out.println("No keystore specified.");
+              System.err.println("No keystore specified.");
           printUsage(System.err);
               System.exit(1);
           }
 
           if (keystorePassword == null || keystorePassword.isEmpty()) {
-              System.out.println("No keystore password specified.");
+              System.err.println("No keystore password specified.");
           printUsage(System.err);
               System.exit(1);
           }
