@@ -43,7 +43,7 @@
 	<dependency>
  		<groupId>com.netiq</groupId>
 	  	<artifactId>websockify</artifactId>
-	  	<version>1.2-SNAPSHOT</version>
+	  	<version>1.2</version>
 	</dependency>
 	<dependency>
 	    <groupId>args4j</groupId>
