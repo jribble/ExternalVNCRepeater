@@ -21,7 +21,7 @@ public class CMASRestResolver implements IProxyTargetResolver
    
    public CMASRestResolver ( String cmasBaseUrl )
    {
-      this ( cmasBaseUrl, new JSONParser(), Client.create() );
+      this ( cmasBaseUrl, new JSONParser(), ClientHelper.createClient() );
    }
    
    public CMASRestResolver ( String cmasBaseUrl, JSONParser parser, Client client )
