@@ -2,7 +2,7 @@ package com.novell.cm.ui.server.vnc;
 
 import java.net.InetSocketAddress;
 
-import org.jboss.netty.channel.ChannelEvent;
+import org.jboss.netty.channel.Channel;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
@@ -31,10 +31,10 @@ public class CMASRestResolver implements IProxyTargetResolver
       this.client = client;
    }
 
-   public InetSocketAddress resolveTarget( ChannelEvent e )
+   public InetSocketAddress resolveTarget( Channel channel )
    {
       // make rest call to cmas to get registration      
-      String remoteIp = ((InetSocketAddress)e.getChannel ( ).getRemoteAddress ( )).getAddress ( ).getHostAddress ( );
+      String remoteIp = ((InetSocketAddress)channel.getRemoteAddress ( )).getAddress ( ).getHostAddress ( );
  
       WebResource webResource = client.resource(cmasBaseUrl + (cmasBaseUrl.endsWith ( "/" ) ? "" : "/") + "uirest/vnc/registration/" + remoteIp );
  

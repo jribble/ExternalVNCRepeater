@@ -54,7 +54,7 @@ public class CMASRestResolverTest
       
       CMASRestResolver resolver = new CMASRestResolver ( cmasBaseUrl, parser, client );
       
-      InetSocketAddress resultAddress = resolver.resolveTarget ( e );
+      InetSocketAddress resultAddress = resolver.resolveTarget ( e.getChannel ( ) );
       
       assertEquals ( host, resultAddress.getHostName ( ) );
       assertEquals ( port, resultAddress.getPort ( ) );
@@ -89,7 +89,7 @@ public class CMASRestResolverTest
       
       CMASRestResolver resolver = new CMASRestResolver ( cmasBaseUrl, parser, client );
       
-      InetSocketAddress resultAddress = resolver.resolveTarget ( e );
+      InetSocketAddress resultAddress = resolver.resolveTarget ( e.getChannel ( ) );
       
       verify(client).resource ( cmasBaseUrl + "uirest/vnc/registration/" + host );
       
@@ -126,7 +126,7 @@ public class CMASRestResolverTest
       
       CMASRestResolver resolver = new CMASRestResolver ( cmasBaseUrl, parser, client );
       
-      InetSocketAddress resultAddress = resolver.resolveTarget ( e );
+      InetSocketAddress resultAddress = resolver.resolveTarget ( e.getChannel ( ) );
       
       verify(client).resource ( cmasBaseUrl + "/uirest/vnc/registration/" + host );
       
