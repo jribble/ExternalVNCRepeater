@@ -10,6 +10,7 @@ import org.kohsuke.args4j.Option;
 
 import com.netiq.websockify.WebsockifyServer;
 import com.netiq.websockify.WebsockifyServer.SSLSetting;
+import com.netiq.websockify.WebsockifySslContext;
 
 
 
@@ -29,6 +30,9 @@ public class ExternalVNCRepeater
    
    @Option(name="--keystore-password",usage="password to the java keystore file. Required for SSL.")
    private String keystorePassword = null;
+   
+   @Option(name="--keystore-key-password",usage="password to the private key in the java keystore file. If not specified the keystore-password value will be used.")
+   private String keystoreKeyPassword = null;
 
    @Argument( index = 0, metaVar = "source_port", usage = "(required) local port the websockify server will listen on", required = true )
    private int           sourcePort;
@@ -99,13 +103,24 @@ public class ExternalVNCRepeater
           printUsage(System.err);
               System.exit(1);
           }
+          
+          if (keystoreKeyPassword == null || keystoreKeyPassword.isEmpty()) {
+             keystoreKeyPassword = keystorePassword;
+          }
+          
+          String invalidMsg = WebsockifySslContext.validateKeystore(keystore, keystorePassword, keystoreKeyPassword);
+          if ( invalidMsg != null ) {
+             System.err.println("Error validating keystore: " + invalidMsg );
+             printUsage(System.err);
+             System.exit(2);
+          }
       }
 
       System.out.println ( "Proxying *:" + sourcePort + " to workloads defined by CMAS at " + cmasBaseUrl + " ..." );
       if(sslSetting != SSLSetting.OFF) System.out.println("SSL is " + (sslSetting == SSLSetting.REQUIRED ? "required." : "enabled."));
 
       WebsockifyServer ws = new WebsockifyServer ( );
-      ws.connect ( sourcePort, new CMASRestResolver ( cmasBaseUrl ), sslSetting, keystore, keystorePassword, null );
+      ws.connect ( sourcePort, new CMASRestResolver ( cmasBaseUrl ), sslSetting, keystore, keystorePassword, keystoreKeyPassword, null );
 
    }
 }
