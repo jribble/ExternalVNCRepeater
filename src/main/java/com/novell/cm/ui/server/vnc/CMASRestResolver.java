@@ -38,7 +38,7 @@ public class CMASRestResolver implements IProxyTargetResolver
  
       WebResource webResource = client.resource(cmasBaseUrl + (cmasBaseUrl.endsWith ( "/" ) ? "" : "/") + "uirest/vnc/registration/" + remoteIp );
  
-      ClientResponse response = webResource.accept("application/json").get(ClientResponse.class);
+      ClientResponse response = webResource.accept("application/json").post(ClientResponse.class);
  
       if (response.getStatus() != 200) {
          return null;
