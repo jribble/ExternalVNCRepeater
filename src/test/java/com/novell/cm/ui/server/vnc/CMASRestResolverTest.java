@@ -6,6 +6,7 @@ import java.net.InetSocketAddress;
 import org.jboss.netty.channel.Channel;
 import org.jboss.netty.channel.ChannelEvent;
 import org.json.simple.parser.JSONParser;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.powermock.api.mockito.PowerMockito;
@@ -24,34 +25,53 @@ import static org.mockito.Mockito.*;
 @PrepareForTest({InetSocketAddress.class,WebResource.Builder.class})
 public class CMASRestResolverTest
 {
-
-   @Test
-   public void testResultParsing ( ) throws Exception
+   String host = null;
+   byte[] hostbytes;
+   int port;
+   String jsonResponse = null;
+   String cmasBaseUrl = null;
+   JSONParser parser = null;
+   Client client = null;
+   ClientResponse clientResponse = null;
+   ChannelEvent e = null;
+   Channel channel = null;
+   InetSocketAddress remoteAddress = null;
+   
+   WebResource webResource = null;
+   Builder builder = null;
+   
+   @Before
+   public void setup ( ) throws Exception
    {
-      String host = "4.3.2.1";
-      byte[] hostbytes = {0x4, 0x3, 0x2, 0x1};
-      int port = 5646;
-      String jsonResponse = "{\"name\":\"name\",\"host\":\"" + host + "\",\"port\":" + port + "}";
-      String cmasBaseUrl = "http://test/";
-      JSONParser parser = new JSONParser();
-      Client client = mock ( Client.class );
-      ClientResponse clientResponse = mock ( ClientResponse.class );
-      ChannelEvent e = mock ( ChannelEvent.class );
-      Channel channel = mock ( Channel.class );
-      InetSocketAddress remoteAddress = new InetSocketAddress ( InetAddress.getByAddress ( null, hostbytes ), port  );
+      host = "4.3.2.1";
+      hostbytes = new byte[] {0x4, 0x3, 0x2, 0x1};
+      port = 5646;
+      jsonResponse = "{\"name\":\"name\",\"host\":\"" + host + "\",\"port\":" + port + "}";
+      cmasBaseUrl = "http://test/";
+      parser = new JSONParser();
+      client = mock ( Client.class );
+      clientResponse = mock ( ClientResponse.class );
+      e = mock ( ChannelEvent.class );
+      channel = mock ( Channel.class );
+      remoteAddress = new InetSocketAddress ( InetAddress.getByAddress ( null, hostbytes ), port  );
       
       when ( e.getChannel ( ) ).thenReturn ( channel );
       when ( channel.getRemoteAddress ( ) ).thenReturn ( remoteAddress );
       
-      WebResource webResource = mock ( WebResource.class );
-      Builder builder = PowerMockito.mock ( Builder.class );
+      webResource = mock ( WebResource.class );
+      builder = PowerMockito.mock ( Builder.class );
       
       when ( client.resource ( (String) any() ) ).thenReturn ( webResource );
       when ( webResource.accept ( (String) any() ) ).thenReturn ( builder );
-      PowerMockito.when ( builder.get ( ClientResponse.class ) ).thenReturn ( clientResponse );
+      PowerMockito.when ( builder.post ( ClientResponse.class ) ).thenReturn ( clientResponse );
       when ( clientResponse.getStatus ( ) ).thenReturn ( 200 );
       when ( clientResponse.getEntity(String.class)).thenReturn ( jsonResponse );
       
+   }
+
+   @Test
+   public void testResultParsing ( ) throws Exception
+   {      
       CMASRestResolver resolver = new CMASRestResolver ( cmasBaseUrl, parser, client );
       
       InetSocketAddress resultAddress = resolver.resolveTarget ( e.getChannel ( ) );
@@ -62,31 +82,8 @@ public class CMASRestResolverTest
 
    @Test
    public void testBaseUrlHandlingTrailingDelimiter ( ) throws Exception
-   {
-      String host = "4.3.2.1";
-      byte[] hostbytes = {0x4, 0x3, 0x2, 0x1};
-      int port = 5646;
-      String jsonResponse = "{\"name\":\"name\",\"host\":\"" + host + "\",\"port\":" + port + "}";
-      String cmasBaseUrl = "http://test/";
-      JSONParser parser = new JSONParser();
-      Client client = mock ( Client.class );
-      ClientResponse clientResponse = mock ( ClientResponse.class );
-      ChannelEvent e = mock ( ChannelEvent.class );
-      Channel channel = mock ( Channel.class );
-      InetSocketAddress remoteAddress = new InetSocketAddress ( InetAddress.getByAddress ( null, hostbytes ), port  );
-      
-      when ( e.getChannel ( ) ).thenReturn ( channel );
-      when ( channel.getRemoteAddress ( ) ).thenReturn ( remoteAddress );
-      
-      WebResource webResource = mock ( WebResource.class );
-      Builder builder = PowerMockito.mock ( Builder.class );
-      
-      when ( client.resource ( (String) any() ) ).thenReturn ( webResource );
-      when ( webResource.accept ( (String) any() ) ).thenReturn ( builder );
-      PowerMockito.when ( builder.get ( ClientResponse.class ) ).thenReturn ( clientResponse );
-      when ( clientResponse.getStatus ( ) ).thenReturn ( 200 );
-      when ( clientResponse.getEntity(String.class)).thenReturn ( jsonResponse );
-      
+   {                      
+      cmasBaseUrl = "http://test/";
       CMASRestResolver resolver = new CMASRestResolver ( cmasBaseUrl, parser, client );
       
       InetSocketAddress resultAddress = resolver.resolveTarget ( e.getChannel ( ) );
@@ -99,31 +96,8 @@ public class CMASRestResolverTest
 
    @Test
    public void testBaseUrlHandlingNoTrailingDelimiter ( ) throws Exception
-   {
-      String host = "4.3.2.1";
-      byte[] hostbytes = {0x4, 0x3, 0x2, 0x1};
-      int port = 5646;
-      String jsonResponse = "{\"name\":\"name\",\"host\":\"" + host + "\",\"port\":" + port + "}";
-      String cmasBaseUrl = "http://test";
-      JSONParser parser = new JSONParser();
-      Client client = mock ( Client.class );
-      ClientResponse clientResponse = mock ( ClientResponse.class );
-      ChannelEvent e = mock ( ChannelEvent.class );
-      Channel channel = mock ( Channel.class );
-      InetSocketAddress remoteAddress = new InetSocketAddress ( InetAddress.getByAddress ( null, hostbytes ), port  );
-      
-      when ( e.getChannel ( ) ).thenReturn ( channel );
-      when ( channel.getRemoteAddress ( ) ).thenReturn ( remoteAddress );
-      
-      WebResource webResource = mock ( WebResource.class );
-      Builder builder = PowerMockito.mock ( Builder.class );
-      
-      when ( client.resource ( (String) any() ) ).thenReturn ( webResource );
-      when ( webResource.accept ( (String) any() ) ).thenReturn ( builder );
-      PowerMockito.when ( builder.get ( ClientResponse.class ) ).thenReturn ( clientResponse );
-      when ( clientResponse.getStatus ( ) ).thenReturn ( 200 );
-      when ( clientResponse.getEntity(String.class)).thenReturn ( jsonResponse );
-      
+   {                      
+      cmasBaseUrl = "http://test";
       CMASRestResolver resolver = new CMASRestResolver ( cmasBaseUrl, parser, client );
       
       InetSocketAddress resultAddress = resolver.resolveTarget ( e.getChannel ( ) );
