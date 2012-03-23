@@ -69,10 +69,12 @@ public class ExternalVNCRepeater
    {
       parser.setUsageWidth ( 80 );
 
+      // parse the command line arguments
       try
       {
          parser.parseArgument ( args );
       }
+      // if there's a problem show the error and command line usage help
       catch ( CmdLineException e )
       {
          System.err.println ( e.getMessage ( ) );
@@ -80,37 +82,50 @@ public class ExternalVNCRepeater
          return;
       }
 
+      // if we were asked for help show it and exit
       if ( showHelp )
       {
          printUsage ( System.out );
          return;
       }
       
+      // set the SSL setting based on the command line params
       SSLSetting sslSetting = SSLSetting.OFF;
       if ( requireSSL ) sslSetting = SSLSetting.REQUIRED;
       else if ( enableSSL ) sslSetting = SSLSetting.ON;
 
-      
+      // if we are doing SSL
       if ( sslSetting != SSLSetting.OFF ) {
+         // make sure there is a keystore path specified
           if (keystore == null || keystore.isEmpty()) {
               System.err.println("No keystore specified.");
           printUsage(System.err);
               System.exit(1);
           }
 
+          // and make sure there is a keystore password specified
           if (keystorePassword == null || keystorePassword.isEmpty()) {
               System.err.println("No keystore password specified.");
           printUsage(System.err);
               System.exit(1);
           }
           
+          // if there's no keystore key password, use the keystore password
           if (keystoreKeyPassword == null || keystoreKeyPassword.isEmpty()) {
              keystoreKeyPassword = keystorePassword;
           }
           
-          String invalidMsg = WebsockifySslContext.validateKeystore(keystore, keystorePassword, keystoreKeyPassword);
-          if ( invalidMsg != null ) {
-             System.err.println("Error validating keystore: " + invalidMsg );
+          // and validate the keystore settings - this actually starts up an SSL
+          // context and lets us know if there were exceptions starting it
+          // this doesn't happen in the current thread when the server is started
+          // so we only know about it in worker threads and put it out to the logger
+          try
+          {
+             WebsockifySslContext.validateKeystore(keystore, keystorePassword, keystoreKeyPassword);
+          }
+          catch ( Exception e )
+          {
+             System.err.println("Error validating keystore: " + e.getMessage() );
              printUsage(System.err);
              System.exit(2);
           }
